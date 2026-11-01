@@ -46,7 +46,7 @@ git push -u origin main
 ```
 index.html      # 全部页面结构 + 交互引擎（自包含，无外部依赖）
 images/         # 47 张 WebP 无损素材 + 1 张 GIF（合计 10.3MB，压缩前 21.9MB）
-audios/         # 1 段 BGM + 5 个音效（10MB，未压缩）
+audios/         # 1 段 BGM（m4a 3.8MB + mp3 兜底）+ 5 个音效（约 190KB）
 webp-map.json   # 原始文件名 → 压缩后文件名的映射
 ```
 
@@ -66,7 +66,7 @@ webp-map.json   # 原始文件名 → 压缩后文件名的映射
 
 | audio_id | 文件 | 触发时机 |
 | --- | --- | --- |
-| `15cn0e0a7mx` | background.mp3 | 背景音乐（加载结束自动播放） |
+| `15cn0e0a7mx` | background.m4a / .mp3 | 背景音乐（加载结束自动播放） |
 | `15cnzte177a` | writing-263642.mp3 | 各题「文字1#x」appear —— 答题卡文字打字时出现 |
 | `15cn3uiajlz` | 卡片翻页声.mp3 | 各页背景图 appear —— 页面入场 |
 | `15co0xdnbe5` | ui-pop-sound.mp3 | 选项 a1~c5 click —— 选中选项 |
@@ -75,6 +75,14 @@ webp-map.json   # 原始文件名 → 压缩后文件名的映射
 
 音效采用克隆节点播放（可重叠、不截断上一次），并在加载结束 / 首次触摸时静音预热解锁，
 以绕开移动端自动播放限制。
+
+BGM 原文件为 653 秒 128kbps MP3（10.2MB），已用 `afconvert` 转码为 HE-AAC 48kbps 的
+`69e9d0fedc5252b4ce00baba.m4a`（3.8MB，-62%）；页面按 `canPlayType('audio/mp4')` 自动选 m4a，
+不支持时回退原 MP3（该 MP3 仅在极老浏览器才会下载）。嫌大可继续压到 32kbps（2.6MB）：
+
+```bash
+afconvert -f m4af -d aach -b 32000 audios/69e9d0fedc5252b4ce00baba.mp3 audios/69e9d0fedc5252b4ce00baba.m4a
+```
 
 ## 开场加载页（firstpage）
 
