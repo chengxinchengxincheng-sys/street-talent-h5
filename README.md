@@ -64,6 +64,18 @@ webp-map.json   # 原始文件名 → 压缩后文件名的映射
 音频与音效 ID 的映射为按时长推断（BGM=653s 长音频，选项音=0.42s 短音频），
 如与原版听感不符，可在 `index.html` 顶部的 `AUDIO` 映射表中调整。
 
+## 原版时序细节（已还原）
+
+- **循环动效**：`presetLoop=1` 的元素无限循环 —— 第2题背景红绿灯的 ¥ 屏闪烁（fade_in 0.5s）、
+  第3题两辆车的穿行（move 5s）、结果页「长按保存图片」闪烁提示（fade_in 1.5s）
+- **升起方向**：`raise_in` 的 `raise=up` 从页面下方升入（分享海报 1.5s 从下往上出场），
+  `raise=down` 从上方落入（答题卡等 9 处）
+- **选中态**：`changeElement background` 作用于文字元素 = 文字变红 `rgba(233,30,99,1)`，
+  同时 `play` 触发字母下方的红色标记横向扫出（0.3s），扫完由 `preset_end` 驱动翻页
+- **第5题 loading**：`changeElement left` 为瞬时 overwrite —— 蒙层（alpha 0.8）与加载 gif
+  原地出现覆盖在当前页，页面不滑动；「结果生成中...」打字机 3s 结束后按分值滑入结果页
+- **淡入类入场动效元素**在播放前隐藏（木疙瘩语义），由 `play()` 触发后才显示
+
 ## 调整计分 / 文案
 
 - 计分：改各题选项热区（`data-nm="a1"~"c5"`）`data-beh` 里 `changeElement` 的 `element_value`
