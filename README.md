@@ -45,16 +45,21 @@ git push -u origin main
 
 ```
 index.html      # 全部页面结构 + 交互引擎（自包含，无外部依赖）
-images/         # 48 张设计素材（原始分辨率）
-audios/         # 1 段 BGM + 5 个音效
+images/         # 47 张 WebP 无损素材 + 1 张 GIF（合计 10.3MB，压缩前 21.9MB）
+audios/         # 1 段 BGM + 5 个音效（10MB，未压缩）
+webp-map.json   # 原始文件名 → 压缩后文件名的映射
 ```
 
 ## 技术说明
 
 页面结构由木疙瘩发布的场景数据（`scene.js`）解析生成：每个元素的坐标（精确到 0.01px）、
-富文本样式、入场动画（move_in / closer_in 等，含延迟与时长）、交互行为
-（click / appear / preset_end 触发的 nextPage / gotoPage / changeElement / play / audio）
+富文本样式、入场动画（打字机 / raise_in / move_in / closer_in / fade_in / move 过场，含延迟与时长）、
+交互行为（click / appear / preset_end 触发的 nextPage / gotoPage / changeElement / play / audio）
 均按原始数据还原。交互引擎以事件委托实现，行为数据内嵌于元素的 `data-beh` 属性。
+
+动效采用「进入页面时启动」的策略：`data-anim` 存 CSS 动画、`data-typer` 存打字机参数，
+翻页时才播放，并重放上一页的初始状态，因此支持反复重测；被 `play()` 引用的元素
+（选中标记、结果生成中）不随页面自动播放，等点击触发。
 
 音频与音效 ID 的映射为按时长推断（BGM=653s 长音频，选项音=0.42s 短音频），
 如与原版听感不符，可在 `index.html` 顶部的 `AUDIO` 映射表中调整。
