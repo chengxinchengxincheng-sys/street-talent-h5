@@ -68,13 +68,28 @@ webp-map.json   # 原始文件名 → 压缩后文件名的映射
 | --- | --- | --- |
 | `15cn0e0a7mx` | background.m4a / .mp3 | 背景音乐（加载结束自动播放） |
 | `15cnzte177a` | writing-263642.mp3 | 各题「文字1#x」appear —— 答题卡文字打字时出现 |
-| `15cn3uiajlz` | 卡片翻页声.mp3 | 各页背景图 appear —— 页面入场 |
+| `15cn3uiajlz` | 卡片翻页声.mp3 | 页面级：转场滑动 **开始**的那一帧（不等 600ms 转场结束） |
 | `15co0xdnbe5` | ui-pop-sound.mp3 | 选项 a1~c5 click —— 选中选项 |
 | `15co5ewjgbr` | 洗牌声.mp3 | 第5题选项 click 附加音 |
 | `15co03qswy0` | drumsticks.mp3 | 首页 START click |
 
-音效采用克隆节点播放（可重叠、不截断上一次），并在加载结束 / 首次触摸时静音预热解锁，
-以绕开移动端自动播放限制。
+### 音画同步
+
+音效在加载阶段就用 `fetch + decodeAudioData` 预解码为 `AudioBuffer`（计入加载进度），
+播放时走 Web Audio 的 `BufferSource`，**零解码延迟、可重叠、不截断**；
+未解锁（移动端首次手势前）自动回退 `<audio>`，保证点击必有声。
+时序上做了三处对齐：
+
+1. **翻页声提到页面级**：源数据把它挂在带入场动画的背景图上，若跟随动画就会晚 600ms
+   （转场结束才响）；现在在 `go()` 启动滑动的同一帧发声。
+2. **书写声跟随文字延迟**：答题卡文字有 1.0~1.6s 的 `presetDelay`，声音按 `data-adel`
+   一并延后，与打字机同帧开始。
+3. **交互改按下即响应**：用 `pointerdown` 触发（移动端 `click` 有约 300ms 延迟），
+   且同一批行为里 `audio` 先发声，不被 `nextPage` / `changeElement` 挤到后面。
+   加载结束即起播 BGM（不再延后 1.2s）。
+
+实测（Playwright，iPhone 390×844）：点击音/洗牌声 1~2ms 触发，翻页声与转场同帧，
+书写声落在文字动画起点。
 
 BGM 原文件为 653 秒 128kbps MP3（10.2MB），已用 `afconvert` 转码为 HE-AAC 48kbps 的
 `69e9d0fedc5252b4ce00baba.m4a`（3.8MB，-62%）；页面按 `canPlayType('audio/mp4')` 自动选 m4a，
