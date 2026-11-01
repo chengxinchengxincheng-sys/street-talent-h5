@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 </div>
 <script>
 var W=402,H=874,GI={"159xus3ngtz": 0, "15c2q0j6hsi": 1, "15a43q6zu3z": 2, "15a4io2orcw": 3, "15a6s347qut": 4, "15a6xfq13gc": 5, "15c39hkpxaz": 6, "15a6zq6f93k": 7, "15c4ih5tjci": 8, "15c4k55sy9h": 9, "15c4ksrq1ho": 10};
-var AUDIO={"15cn0e0a7mx": "audios/69e9d0fedc5252b4ce00baba.mp3", "15co0xdnbe5": "audios/69e9d2c0a295e3fab005197a.mp3", "15co03qswy0": "audios/69e9d2b07355451de00899c9.mp3", "15cnzte177a": "audios/69e9f003bb041d57ae04c7b1.mp3", "15co5ewjgbr": "audios/69e9d2e2ee10968c88068221.mp3"}, BGM="audios/69e9d0fedc5252b4ce00baba.mp3", SFX="audios/69e9d2c0a295e3fab005197a.mp3";
+var AUDIO={"15cn0e0a7mx": "audios/69e9d0fedc5252b4ce00baba.mp3", "15cnzte177a": "audios/69e9d2e2ee10968c88068221.mp3", "15co0xdnbe5": "audios/69e9f003bb041d57ae04c7b1.mp3", "15cn3uiajlz": "audios/69e9d2c0a295e3fab005197a.mp3", "15co5ewjgbr": "audios/69e9f3cb785b5d40c2057e22.mp3", "15co03qswy0": "audios/69e9d2b07355451de00899c9.mp3"}, BGM="audios/69e9d0fedc5252b4ce00baba.mp3", SFX="audios/69e9f003bb041d57ae04c7b1.mp3";
 var PLAY_TARGETS=["A1#1", "A1#2", "A1#3", "A1#4", "A1#5", "B1#1", "B1#2", "B1#3", "B1#4", "B1#5", "C1#1", "C1#2", "C1#3", "C1#4", "C1#5", "分享海报1", "分享海报2", "分享海报3", "分享海报4", "结果生成中", "长按保存图片", "长按保存图片#1", "长按保存图片#2", "长按保存图片#3"];
 var PRELOAD=["images/69de4bb7c63aa94ff702af87.webp", "images/69de4c9e831ab7d5bc0683e6.webp", "images/69de4c9e984a36850f08c995.webp", "images/69de4c9edeed7c7f830b1d86.webp", "images/69de4c9efdf3a5881e0f0cbf.webp", "images/69de4e69582fcb150c063506.webp", "images/69de4f68b53fb422d90fc93e.webp", "images/69de4fa2c70818bbfa0967e1.webp", "images/69de4fa3f18679a4040e886f.webp", "images/69de50f6699b4a3fd2016d0b.webp", "images/69de5681a4d78527520c7d17.webp", "images/69def5ed8b4c24292b00875d.webp", "images/69def8b58e6011c5830f8792.webp", "images/69df007881d847533a0f26df.webp", "images/69df0078c99ae2b8ee015775.webp", "images/69df44f6c864b40b0c0eda79.webp", "images/69df46e7e4485f69270373b1.webp", "images/69df476f4af1a00d2b067d59.webp", "images/69df476fadbc2708820378a8.webp", "images/69df4867db53e505790bbb75.webp", "images/69df4887ae1ab329e4002005.webp", "images/69df4887e9a115cf9a016fee.webp", "images/69df4ad6d4f473c300006e33.webp", "images/69df80f0fc4ee1e57c059f9c.webp", "images/69df8925a956d7a03700a627.webp", "images/69df89288488d8c83705e35a.webp", "images/69e784990b004618d10ca392.gif", "images/69e79832d927e70837049481.webp", "images/69e7986775b0089e7105ea2f.webp", "images/69e79867af680c318a0b09c3.webp", "images/69e79b374bf2dc112e091c30.webp", "images/69e79b3f6755f0c9bc053873.webp", "images/69e79b4857db4a7f6f0e07a4.webp", "images/69e79b488a55c447b30db9c2.webp", "images/69e79b49f9f623898a0c08cb.webp", "images/69e79b4afed5012d4f035291.webp", "images/69ea131e1f1368e8b101ac57.webp", "images/69ea1347809eb8b7cc040a05.webp", "images/69ea1355c8ebc4db960e831d.webp", "images/69fc966b916dd351e601e21e.webp", "images/69fc966cb214a41c4b01422e.webp", "images/69fc966d83da20d0d2042cc3.webp", "images/69fc966ea46fae426d002126.webp"];                               // 开场加载用的资源清单
 var VARS={point:0}, cur=0;
@@ -107,15 +107,34 @@ function log(s){ if(dbg){dbgEl.textContent=s; console.log(s);} }
 
 /* ---------- 音频 ---------- */
 var bgm=new Audio(BGM); bgm.loop=true; bgm.preload='none';   // 首屏不预载 10MB BGM
-var pool={};
+var pool={}, unlocked=false;
+/* 解锁：iOS/安卓首次自动播放受限，用静音空放预热每个音效，之后即可在任意时机发声 */
+function warm(){ if(unlocked) return;
+  Object.keys(AUDIO).forEach(function(id){
+    try{ var a=new Audio(AUDIO[id]); a.volume=0;
+      a.play().then(function(){ unlocked=true; a.pause(); a.currentTime=0; }).catch(function(){}); }catch(e){}
+  });
+}
+Object.keys(AUDIO).forEach(function(id){          // 预建并预载全部音效（约 190KB），避免首次点击延迟
+  try{ var a=pool[id]=new Audio(AUDIO[id]); a.preload='auto'; a.load(); }catch(e){}
+});
 function sfx(id){ var src=AUDIO[id]||SFX;
-  try{ var a=pool[id]; if(!a){a=pool[id]=new Audio(src);} a.currentTime=0; a.play().catch(function(){}); }catch(e){} }
+  try{
+    var base=pool[id]; if(!base){ base=pool[id]=new Audio(src); base.preload='auto'; }
+    var a=base.cloneNode();                     // 克隆播放：可重叠，不截断上一次
+    a.onended=function(){ try{a.src='';}catch(e){} };
+    a.play().catch(function(){});
+  }catch(e){} }
+window.addEventListener('pointerdown',warm,{once:true});
+window.addEventListener('touchstart',warm,{once:true});
+window.addEventListener('keydown',warm,{once:true});
 document.getElementById('bgmbtn').addEventListener('click',function(){
   if(bgm.paused){ bgm.play().catch(function(){}); this.classList.add('on'); }
   else { bgm.pause(); this.classList.remove('on'); }
 });
 document.addEventListener('touchstart',function once(){ bgm.play().then(function(){
   document.getElementById('bgmbtn').classList.add('on');}).catch(function(){});
+  warm();
   document.removeEventListener('touchstart',once);},{once:true});
 
 /* ---------- 工具 ---------- */
@@ -339,7 +358,8 @@ function _enter(){
     loader.classList.add('hide');
     setTimeout(function(){ loader.style.display='none'; }, 480);
     startPage(0);                                  // 首页入场动画此刻才播
-    bgm.play().then(function(){ document.getElementById('bgmbtn').classList.add('on'); }).catch(function(){});
+    warm();                                        // 尝试预热音效（失败则由首次触摸兜底）
+    bgm.play().then(function(){ document.getElementById('bgmbtn').classList.add('on'); warm(); }).catch(function(){});
   }, 380);
 }
 var smoother=setInterval(function(){               // 进度平滑推进
