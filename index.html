@@ -427,7 +427,7 @@ document.addEventListener('click',onTap);            // 兜底：无 pointer 事
 
 /* ---------- 开场加载：真实预载进度，结束后进入首页并默认播放 BGM ---------- */
 var loader=document.getElementById('loader'), lfill=document.getElementById('lfill'), lpct=document.getElementById('lpct');
-var total=(PRELOAD.length||1)+SFX_IDS.length, done=0, pct=0, finished=false, T0=Date.now();
+var total=PRELOAD.length||1, done=0, pct=0, finished=false, T0=Date.now();
 function setPct(p){ pct=p; lfill.style.transform='translateX('+(p*2.52)+'px)'; lpct.textContent=p+'%'; }
 function finish(){
   if(finished) return; finished=true; clearInterval(smoother);
@@ -463,7 +463,7 @@ PRELOAD.forEach(function(src){
   im.onload=im.onerror=tick;
   im.src=src;
 });
-preloadSfx(tick);                    // 音效一并计入加载进度：加载结束即可零延迟发声
+// 音效不阻塞加载页：进首页后再后台解码（190KB 让位给首屏图片）
 setTimeout(finish, 12000);                         // 兜底：最多等 12s
 
 /* ---------- 适配 ---------- */
