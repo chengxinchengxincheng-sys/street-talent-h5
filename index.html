@@ -112,7 +112,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;
 </div>
 <script>
 var W=402,H=874,GI={"159xus3ngtz": 0, "15c2q0j6hsi": 1, "15a43q6zu3z": 2, "15a4io2orcw": 3, "15a6s347qut": 4, "15a6xfq13gc": 5, "15c39hkpxaz": 6, "15a6zq6f93k": 7, "15c4ih5tjci": 8, "15c4k55sy9h": 9, "15c4ksrq1ho": 10};
-var AUDIO={"15cn0e0a7mx": "audios/69e9d0fedc5252b4ce00baba.mp3", "15cnzte177a": "audios/69e9d2e2ee10968c88068221.mp3", "15co0xdnbe5": "audios/69e9f003bb041d57ae04c7b1.mp3", "15cn3uiajlz": "audios/69e9d2c0a295e3fab005197a.mp3", "15co5ewjgbr": "audios/69e9f3cb785b5d40c2057e22.mp3", "15co03qswy0": "audios/69e9d2b07355451de00899c9.mp3"}, BGM="audios/69e9d0fedc5252b4ce00baba.mp3", SFX="audios/69e9f003bb041d57ae04c7b1.mp3";
+var AUDIO={"15cn0e0a7mx": "audios/69e9d0fedc5252b4ce00baba.mp3", "15cnzte177a": "audios/69e9d2e2ee10968c88068221.mp3", "15co0xdnbe5": "audios/69e9f003bb041d57ae04c7b1.mp3", "15cn3uiajlz": "audios/69e9d2c0a295e3fab005197a.mp3", "15co5ewjgbr": "audios/69e9f3cb785b5d40c2057e22.mp3", "15co03qswy0": "audios/69e9d2b07355451de00899c9.mp3"}, BGM="audios/69e9d0fedc5252b4ce00baba.mp3", BGM_M4A="audios/69e9d0fedc5252b4ce00baba.m4a", SFX="audios/69e9f003bb041d57ae04c7b1.mp3";
 var PLAY_TARGETS=["A1#1", "A1#2", "A1#3", "A1#4", "A1#5", "B1#1", "B1#2", "B1#3", "B1#4", "B1#5", "C1#1", "C1#2", "C1#3", "C1#4", "C1#5", "分享海报1", "分享海报2", "分享海报3", "分享海报4", "结果生成中", "长按保存图片", "长按保存图片#1", "长按保存图片#2", "长按保存图片#3"];
 var PRELOAD=["images/69de4bb7c63aa94ff702af87.webp", "images/69de4c9e831ab7d5bc0683e6.webp", "images/69de4c9e984a36850f08c995.webp", "images/69de4c9edeed7c7f830b1d86.webp", "images/69de4c9efdf3a5881e0f0cbf.webp", "images/69de4e69582fcb150c063506.webp", "images/69de4f68b53fb422d90fc93e.webp", "images/69de4fa2c70818bbfa0967e1.webp", "images/69de4fa3f18679a4040e886f.webp", "images/69de5f5dcb9dd44ce40b2ce8.webp", "images/69de67f229229630ee036017.webp"];                               // 开场加载用的资源清单
 var VARS={point:0}, cur=0;
@@ -121,16 +121,21 @@ var dbgEl=document.getElementById('dbg'); if(dbg) dbgEl.classList.add('on');
 function log(s){ if(dbg){dbgEl.textContent=s; console.log(s);} }
 
 /* ---------- 音频 ---------- */
-var bgm=new Audio(BGM); bgm.loop=true; bgm.preload='none';   // 首屏不预载 10MB BGM
+/* BGM 优先用 HE-AAC 48kbps 的 m4a（10.2MB → 3.8MB），不支持时回退原 mp3 */
+var bgm=new Audio();
+(function(){ var c=new Audio().canPlayType('audio/mp4');
+  bgm.src=(c==='probably'||c==='maybe')?BGM_M4A:BGM; })();
+bgm.loop=true; bgm.preload='none';                 // 首屏不预载 BGM
 var pool={}, unlocked=false;
 /* 解锁：iOS/安卓首次自动播放受限，用静音空放预热每个音效，之后即可在任意时机发声 */
+var SFX_IDS=Object.keys(AUDIO).filter(function(id){ return id!=='15cn0e0a7mx'; });   // 排除 BGM
 function warm(){ if(unlocked) return;
-  Object.keys(AUDIO).forEach(function(id){
-    try{ var a=new Audio(AUDIO[id]); a.volume=0;
+  SFX_IDS.forEach(function(id){
+    try{ var a=(pool[id]||new Audio(AUDIO[id])).cloneNode(); a.volume=0;   // 复用已预载的源，避免重复请求
       a.play().then(function(){ unlocked=true; a.pause(); a.currentTime=0; }).catch(function(){}); }catch(e){}
   });
 }
-Object.keys(AUDIO).forEach(function(id){          // 预建并预载全部音效（约 190KB），避免首次点击延迟
+SFX_IDS.forEach(function(id){          // 预建并预载全部音效（约 190KB），避免首次点击延迟
   try{ var a=pool[id]=new Audio(AUDIO[id]); a.preload='auto'; a.load(); }catch(e){}
 });
 function sfx(id){ var src=AUDIO[id]||SFX;
